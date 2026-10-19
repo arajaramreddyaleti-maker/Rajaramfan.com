@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dual Fan Simulator Game</title>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background-color: #1a1a1a;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  h1 {
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+    color: #4da6ff;
+  }
+  .ceiling-container {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    height: 420px;
+    background: #e3e5e8;
+    border-radius: 16px;
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.15), 0 10px 30px rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    overflow: hidden;
+    border: 4px solid #333;
+  }
+  /* Recessed lights simulation */
+  .recessed-light {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 20px #fff, 0 0 40px #fff;
+  }
+  .light-1 { top: 20px; left: 40px; }
+  .light-2 { bottom: 20px; right: 40px; }
+
+  /* Fan Box */
+  .fan-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .fan-container {
+    width: 220px;
+    height: 220px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .fan-center {
+    width: 50px;
+    height: 50px;
+    background: radial-gradient(circle, #8b263e 0%, #4a1220 100%);
+    border: 3px solid #d4af37;
+    border-radius: 50%;
+    position: absolute;
+    z-index: 10;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  }
+
+  .blades {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    transition: transform 0.1s linear;
+  }
+
+  .blade {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 90px;
+    height: 22px;
+    background: linear-gradient(90deg, #b83252 0%, #d1d5db 40%, #e5e7eb 100%);
+    border-radius: 12px;
+    transform-origin: 0% 50%;
+    box-shadow: 2px 5px 8px rgba(0,0,0,0.15);
+  }
+
+  .blade:nth-child(1) { transform: rotate(0deg) translateY(-50%); }
+  .blade:nth-child(2) { transform: rotate(120deg) translateY(-50%); }
+  .blade:nth-child(3) { transform: rotate(240deg) translateY(-50%); }
+
+  /* Controls Panel */
+  .controls-panel {
+    margin-top: 30px;
+    display: flex;
+    gap: 40px;
+    background: #2a2a2a;
+    padding: 20px 40px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .control-group h3 {
+    font-size: 1.1rem;
+    color: #ddd;
+  }
+
+  .btn-toggle {
+    width: 80px;
+    height: 40px;
+    border-radius: 20px;
+    border: none;
+    background-color: #ff4d4d;
+    color: white;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: all 0.3s ease;
+  }
+
+  .btn-toggle.active {
+    background-color: #2ecc71;
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.6);
+  }
+
+  .status-text {
+    font-size: 0.9rem;
+    color: #aaa;
+  }
+
+  /* Fan Spinning Animation Classes */
+  .spinning {
+    animation: spin 0.4s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+
+  <h1>Ceiling Fan Controller Game</h1>
+
+  <div class="ceiling-container">
+    <div class="recessed-light light-1"></div>
+    <div class="recessed-light light-2"></div>
+
+    <!-- Fan 1 (Left) -->
+    <div class="fan-wrapper">
+      <div class="fan-container">
+        <div class="fan-center"></div>
+        <div class="blades" id="fan1">
+          <div class="blade"></div>
+          <div class="blade"></div>
+          <div class="blade"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fan 2 (Right) -->
+    <div class="fan-wrapper">
+      <div class="fan-container">
+        <div class="fan-center"></div>
+        <div class="blades" id="fan2">
+          <div class="blade"></div>
+          <div class="blade"></div>
+          <div class="blade"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Control Buttons -->
+  <div class="controls-panel">
+    <div class="control-group">
+      <h3>Fan 1 (Left)</h3>
+      <button class="btn-toggle" id="btn1" onclick="toggleFan(1)">OFF</button>
+      <span class="status-text" id="status1">Status: Stopped</span>
+    </div>
+
+    <div class="control-group">
+      <h3>Fan 2 (Right)</h3>
+      <button class="btn-toggle" id="btn2" onclick="toggleFan(2)">OFF</button>
+      <span class="status-text" id="status2">Status: Stopped</span>
+    </div>
+  </div>
+
+  <script>
+    const fanState = {
+      1: false,
+      2: false
+    };
+
+    function toggleFan(fanNum) {
+      fanState[fanNum] = !fanState[fanNum];
+      
+      const fanEl = document.getElementById(`fan${fanNum}`);
+      const btnEl = document.getElementById(`btn${fanNum}`);
+      const statusEl = document.getElementById(`status${fanNum}`);
+
+      if (fanState[fanNum]) {
+        fanEl.classList.add('spinning');
+        btnEl.classList.add('active');
+        btnEl.innerText = 'ON';
+        statusEl.innerText = 'Status: Running';
+      } else {
+        fanEl.classList.remove('spinning');
+        btnEl.classList.remove('active');
+        btnEl.innerText = 'OFF';
+        statusEl.innerText = 'Status: Stopped';
+      }
+    }
+  </script>
+</body>
+</html>
